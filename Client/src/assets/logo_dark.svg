@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 300" role="img" aria-label="Edusphere logo">
+  <title>Edusphere</title>
+  <rect width="1000" height="300" fill="#000000"/>
+
+  <!-- Blue circular mark -->
+  <circle cx="135" cy="150" r="110" fill="#1267F5"/>
+
+  <!-- Angular emblem -->
+  <path d="M177 85 L90 142 Q86 145 91 148 L136 150 L177 85Z" fill="#050505"/>
+  <path d="M105 205 L191 151 Q195 148 190 145 L145 143 L105 205Z" fill="#050505"/>
+
+  <!-- Wordmark -->
+  <text x="270" y="190"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="112"
+        font-weight="800"
+        letter-spacing="-5"
+        fill="#FFFFFF">Edusphere</text>
+</svg>
