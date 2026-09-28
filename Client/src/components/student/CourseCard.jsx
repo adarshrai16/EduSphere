@@ -4,16 +4,22 @@ import { AppContext } from '../../context/AppContext'
 import { Link } from 'react-router-dom'
 
 const CourseCard = ({ course }) => {
+
   const { currency, calculateRating } = useContext(AppContext)
 
   const rating = calculateRating(course)
 
+  const finalPrice =
+    course.coursePrice - (course.discount * course.coursePrice) / 100
+
   return (
     <Link
-      to={'/course/' + course._id}
+      to={`/course/${course._id}`}
       onClick={() => scrollTo(0, 0)}
       className="course-card"
     >
+
+      {/* Course image */}
       <img
         src={course.courseThumbnail}
         alt={course.courseTitle}
@@ -22,24 +28,25 @@ const CourseCard = ({ course }) => {
 
       <div className="course-card-content">
 
+        {/* Course title */}
         <h3 className="course-title">
           {course.courseTitle}
         </h3>
 
+        {/* Rating */}
         <div className="course-rating">
+
           <span className="rating-number">
             {rating.toFixed(1)}
           </span>
 
           <div className="rating-stars">
-            {[...Array(5)].map((_, i) => (
+            {[0, 1, 2, 3, 4].map((i) => (
               <img
                 key={i}
-                src={
-                  i < Math.floor(rating)
-                    ? assets.star
-                    : assets.star_blank
-                }
+                src={i < Math.floor(rating)
+                  ? assets.star
+                  : assets.star_blank}
                 alt=""
               />
             ))}
@@ -48,17 +55,16 @@ const CourseCard = ({ course }) => {
           <span className="rating-count">
             ({course.courseRatings.length})
           </span>
+
         </div>
 
+        {/* Price */}
         <p className="course-price">
-          {currency}
-          {(
-            course.coursePrice -
-            (course.discount * course.coursePrice) / 100
-          ).toFixed(2)}
+          {currency}{finalPrice.toFixed(2)}
         </p>
 
       </div>
+
     </Link>
   )
 }

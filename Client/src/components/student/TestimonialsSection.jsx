@@ -26,8 +26,6 @@ const TestimonialsSection = () => {
             className="testimonial-card"
           >
 
-            {/* User information */}
-
             <div className="testimonial-user">
 
               <img
@@ -50,11 +48,8 @@ const TestimonialsSection = () => {
             </div>
 
 
-            {/* Testimonial content */}
-
             <div className="testimonial-content">
 
-              {/* Stars */}
 
               <div className="testimonial-stars">
 
@@ -75,16 +70,11 @@ const TestimonialsSection = () => {
               </div>
 
 
-              {/* Feedback */}
-
               <p>
                 {testimonial.feedback}
               </p>
 
             </div>
-
-
-            {/* Read more */}
 
             <a
               href="#"

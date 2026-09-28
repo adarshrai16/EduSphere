@@ -7,8 +7,6 @@ const Footer = () => {
 
       <div className="footer-content">
 
-        {/* Logo & Description */}
-
         <div className="footer-section footer-brand">
 
           <img
@@ -23,9 +21,6 @@ const Footer = () => {
           </p>
 
         </div>
-
-
-        {/* Company */}
 
         <div className="footer-section footer-company">
 
@@ -64,8 +59,6 @@ const Footer = () => {
         </div>
 
 
-        {/* Newsletter */}
-
         <div className="footer-section footer-newsletter">
 
           <h2>
@@ -94,9 +87,6 @@ const Footer = () => {
         </div>
 
       </div>
-
-
-      {/* Copyright */}
 
       <p className="footer-copyright">
         Copyright 2026 © EduSphere. All Right Reserved.

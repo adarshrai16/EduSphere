@@ -1,8 +1,11 @@
 import React, { useContext, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { AppContext } from '../../context/AppContext'
 import { assets } from '../../assets/assets'
 import { useClerk, useUser } from '@clerk/react'
+import Footer from '../../components/student/Footer'
+import YouTube from 'react-youtube'
+
 
 const CourseDetails = () => {
 
@@ -10,12 +13,27 @@ const CourseDetails = () => {
 
   const {
     allCourses,
+    enrolledCourses,
     calculateRating,
+    calculateCourseDuration,
+    calculateNoOfLectures,
     currency,
     enrollCourse
-} = useContext(AppContext)
+  } = useContext(AppContext)
 
   const [openChapter, setOpenChapter] = useState(0)
+  const [previewVideo, setPreviewVideo] = useState(null)
+
+  const extractVideoId = (url) => {
+    if (!url) return null
+
+    try {
+      const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/)
+      return match ? match[1] : null
+    } catch {
+      return null
+    }
+  }
 
   // Find selected course
   const course = allCourses.find(
@@ -39,23 +57,38 @@ const CourseDetails = () => {
     course.coursePrice -
     (course.discount * course.coursePrice) / 100
 
-    const { openSignIn } = useClerk()
-const { user } = useUser()
+  const { openSignIn } = useClerk()
+  const { user } = useUser()
+  const isAlreadyEnrolled = enrolledCourses.some(item => item._id === course._id)
+  const previewVideoId = previewVideo ? extractVideoId(previewVideo.lectureUrl) : null
+
 
   return (
     <div className="course-details-page">
 
-      {/* ================= COURSE INFORMATION ================= */}
+      {/*COURSE INFORMATION*/}
 
       <div className="course-details-container">
 
-        {/* ================= LEFT SIDE ================= */}
+        {/*LEFT SIDE*/}
 
         <div className="course-details-left">
 
-          <p className="course-breadcrumb">
-            Home / Course / {course.courseTitle}
-          </p>
+          <nav className="course-breadcrumb" aria-label="Breadcrumb">
+            <ol className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+              <li>
+                <Link to="/" className="text-slate-500 transition hover:text-blue-700">Home</Link>
+              </li>
+              <li aria-hidden="true" className="text-slate-300">/</li>
+              <li>
+                <Link to="/courselist" className="text-slate-500 transition hover:text-blue-700">Course</Link>
+              </li>
+              <li aria-hidden="true" className="text-slate-300">/</li>
+              <li aria-current="page" title={course.courseTitle} className="max-w-[60vw] truncate font-medium text-slate-800 sm:max-w-sm">
+                {course.courseTitle}
+              </li>
+            </ol>
+          </nav>
 
           <h1 className="course-details-title">
             {course.courseTitle}
@@ -68,7 +101,7 @@ const { user } = useUser()
             }}
           />
 
-          {/* ================= RATING ================= */}
+          {/*RATING*/}
 
           <div className="course-rating">
 
@@ -100,7 +133,7 @@ const { user } = useUser()
 
           </div>
 
-          {/* ================= EDUCATOR ================= */}
+          {/*EDUCATOR*/}
 
           <p className="course-educator">
 
@@ -115,15 +148,35 @@ const { user } = useUser()
         </div>
 
 
-        {/* ================= PURCHASE CARD ================= */}
+        {/*PURCHASE CARD*/}
 
         <div className="course-purchase-card">
 
-          <img
-            src={course.courseThumbnail}
-            alt={course.courseTitle}
-            className="course-details-thumbnail"
-          />
+          {previewVideoId ? (
+            <div className="mb-4">
+              <YouTube
+                videoId={previewVideoId}
+                opts={{
+                  width: '100%',
+                  height: '260',
+                  playerVars: {
+                    autoplay: 0,
+                    controls: 1,
+                    rel: 0
+                  }
+                }}
+                className="w-full"
+              />
+            </div>
+          ) : (
+            <img
+              src={course.courseThumbnail}
+              alt={course.courseTitle}
+              className="course-details-thumbnail"
+            />
+          )}
+
+         
 
           <div className="course-purchase-content">
 
@@ -140,25 +193,57 @@ const { user } = useUser()
             <p className="discount-text">
               {course.discount}% off
             </p>
+          </div>
 
-           <button
-    className="enroll-button"
-    onClick={() => {
+          <div className='flex items-center text-sm md:text-default gap-4 pt-2 md:pt-4 text-gray-600'>
+            <div className='flex items-center gap-1'>
+              <img src={assets.star} alt="star icon" />
+              <p>{calculateRating(course).toFixed(1)}</p>
+            </div>
 
-        if (!user) {
-            openSignIn()
-            return
-        }
+            <div className='h-4 w-px bg-gray-500/40'></div>
 
-        enrollCourse(course)
+            <div className='flex items-center gap-1'>
+              <img src={assets.time_clock_icon} alt="clock icon" />
+              <p>{calculateCourseDuration(course)}</p>
+            </div>
 
-        alert('Course enrolled successfully!')
+            <div className='h-4 w-px bg-gray-500/40'></div>
 
-    }}
->
-    Enroll Now
-</button>
+            <div className='flex items-center gap-1'>
+              <img src={assets.lesson_icon} alt="lesson icon" />
+              <p>{calculateNoOfLectures(course)} lessons</p>
+            </div>
+          </div>
 
+          <button
+            className="md:mt-6 mt-4 w-full py-3 rounded bg-blue-600 text-white font-medium"
+            onClick={() => {
+              if (!user) {
+                openSignIn()
+                return
+              }
+
+              if (isAlreadyEnrolled) {
+                return
+              }
+
+              enrollCourse(course)
+              alert('Course enrolled successfully!')
+            }}
+          >
+            {isAlreadyEnrolled ? 'Already Enrolled' : 'Enroll Now'}
+          </button>
+
+          <div className="pt-6">
+            <p className="md:text-xl text-lg font-medium text-gray-800">What's in the course?</p>
+            <ul className="m-4 pt-2 text-sm md:text-default list-disc text-gray-500">
+              <li>Lifetime access with free updates.</li>
+              <li>Step-by-step, hands-on project guidance.</li>
+              <li>Download resources and source code.</li>
+              <li>Quizzers to test your knowledge.</li>
+              <li>Certificate of completion.</li>
+            </ul>
           </div>
 
         </div>
@@ -166,7 +251,7 @@ const { user } = useUser()
       </div>
 
 
-      {/* ================= COURSE CURRICULUM ================= */}
+      {/*COURSE CURRICULUM*/}
 
       <div className="course-curriculum">
 
@@ -251,9 +336,21 @@ const { user } = useUser()
 
                         </div>
 
-                        <span className="lecture-duration">
-                          {lecture.lectureDuration} min
-                        </span>
+                        <div className="flex items-center gap-2">
+                          {lecture.isPreviewFree && (
+                            <button
+                              type="button"
+                              className="px-2 py-1 text-xs rounded bg-blue-100 text-blue-700 font-medium"
+                              onClick={() => setPreviewVideo(lecture)}
+                            >
+                              Preview
+                            </button>
+                          )}
+
+                          <span className="lecture-duration">
+                            {lecture.lectureDuration} min
+                          </span>
+                        </div>
 
                       </div>
 
@@ -271,8 +368,6 @@ const { user } = useUser()
 
       </div>
 
-
-      {/* ================= WHAT YOU'LL LEARN ================= */}
 
       <div className="course-learn">
 
@@ -313,6 +408,7 @@ const { user } = useUser()
         </div>
 
       </div>
+      <Footer/>
 
     </div>
   )

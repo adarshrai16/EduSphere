@@ -14,17 +14,12 @@ const CourseList = () => {
 
   return (
     <div className="course-list-page">
-
       <div className="course-list-header">
-
         <div>
           <h1>Course List</h1>
 
           <p>
-            <span
-              className="home-link"
-              onClick={() => navigate('/')}
-            >
+            <span className="home-link" onClick={() => navigate('/')}>
               Home
             </span>
             {' / '}
@@ -32,30 +27,18 @@ const CourseList = () => {
           </p>
         </div>
 
-        <SearchBar
-          search={search}
-          setSearch={setSearch}
-        />
-
+        <SearchBar search={search} setSearch={setSearch} />
       </div>
 
       <div className="course-grid">
-
         {filteredCourses.length > 0 ? (
           filteredCourses.map((course) => (
-            <CourseCard
-              key={course._id}
-              course={course}
-            />
+            <CourseCard key={course._id} course={course} />
           ))
         ) : (
-          <p className="no-courses">
-            No courses found.
-          </p>
+          <p className="no-courses">No courses found.</p>
         )}
-
       </div>
-
     </div>
   )
 }

@@ -25,8 +25,6 @@ const Navbar = () => {
             }
         >
 
-            {/* Logo */}
-
             <img
                 onClick={() => navigate('/')}
                 src={assets.logo}
@@ -77,32 +75,6 @@ const Navbar = () => {
             </div>
 
 
-            {/* Mobile */}
-
-            <div className="navbar-mobile">
-
-                <div className="mobile-links">
-
-                    {user && (
-                        <>
-                            <button
-                                onClick={() => navigate('/educator')}
-                            >
-                                {isEducator
-                                    ? 'Educator Dashboard'
-                                    : 'Become Educator'
-                                }
-                            </button>
-
-                            <span>|</span>
-
-                            <Link to="/myenrollments">
-                                My Enrollments
-                            </Link>
-                        </>
-                    )}
-
-                </div>
 
 
                 {user ? (
@@ -119,7 +91,6 @@ const Navbar = () => {
                     </button>
                 )}
 
-            </div>
 
         </nav>
     )
