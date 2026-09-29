@@ -1,7 +1,7 @@
 import React, { useContext } from 'react'
 import { assets } from '../../assets/assets'
 import { Link, useLocation } from 'react-router-dom'
-import { useClerk, UserButton, useUser } from '@clerk/react'
+import { useClerk, UserButton, useUser } from '@clerk/clerk-react'
 import { AppContext } from '../../context/AppContext'
 
 const Navbar = () => {
@@ -32,7 +32,6 @@ const Navbar = () => {
                 className="navbar-logo"
             />
 
-
             {/* Desktop */}
 
             <div className="navbar-desktop">
@@ -60,7 +59,6 @@ const Navbar = () => {
 
                 </div>
 
-
                 {user ? (
                     <UserButton />
                 ) : (
@@ -74,23 +72,21 @@ const Navbar = () => {
 
             </div>
 
+            {/* Mobile */}
 
-
-
-                {user ? (
-                    <UserButton />
-                ) : (
-                    <button
-                        onClick={() => openSignIn()}
-                        className="mobile-login-btn"
-                    >
-                        <img
-                            src={assets.user_icon}
-                            alt="User"
-                        />
-                    </button>
-                )}
-
+            {user ? (
+                <UserButton />
+            ) : (
+                <button
+                    onClick={() => openSignIn()}
+                    className="mobile-login-btn"
+                >
+                    <img
+                        src={assets.user_icon}
+                        alt="User"
+                    />
+                </button>
+            )}
 
         </nav>
     )
