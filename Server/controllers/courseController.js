@@ -7,7 +7,7 @@ export const getAllCourse = async (req, res) => {
 
         const courses = await Course.find({ isPublished: true })
             .select(['-courseContent', '-enrolledStudents'])
-            .populate({ path: 'educator', select: '-password' })
+            .populate({ path: 'educator', select: 'name imageUrl' })
 
         res.json({ success: true, courses })
 
@@ -25,11 +25,15 @@ export const getCourseId = async (req, res) => {
     try {
 
         const courseData = await Course.findById(id)
-            .populate({ path: 'educator'})
+            .populate({ path: 'educator', select: 'name imageUrl' })
+
+        if (!courseData) {
+            return res.json({ success: false, message: 'Course not found' })
+        }
 
         // Remove lectureUrl if isPreviewFree is false
-        courseData.courseContent.forEach(chapter => {
-            chapter.chapterContent.forEach(lecture => {
+        courseData.courseContent?.forEach(chapter => {
+            chapter.chapterContent?.forEach(lecture => {
                 if (!lecture.isPreviewFree) {
                     lecture.lectureUrl = "";
                 }

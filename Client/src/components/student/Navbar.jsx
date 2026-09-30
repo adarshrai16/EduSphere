@@ -24,12 +24,21 @@ const Navbar = () => {
 
   const becomeEducator = async () => {
     try {
+      if (!user) {
+        openSignIn()
+        return
+      }
+
       if (isEducator) {
         navigate('/educator')
         return
       }
 
       const token = await getToken()
+      if (!token) {
+        openSignIn()
+        return
+      }
 
       const { data } = await axios.get(
         `${backendUrl}/api/educator/update-role`,

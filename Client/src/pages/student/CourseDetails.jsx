@@ -39,7 +39,7 @@ const CourseDetails=()=>{
   useEffect(()=>{fetchCourse()},[id]);
 
   useEffect(()=>{
-    if(userData&&courseData)setIsAlreadyEnrolled(userData.enrolledCourses.includes(courseData._id));
+    if(userData&&courseData)setIsAlreadyEnrolled((userData.enrolledCourses||[]).some(id=>String(id)===String(courseData._id)));
   },[userData,courseData]);
 
   if(!courseData)return <Loading/>;

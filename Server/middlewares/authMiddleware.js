@@ -1,11 +1,16 @@
 import { clerkClient } from "@clerk/express"
+import { getRequestUserId } from "../utils/auth.js"
 
 // Middleware ( Protect Educator Routes )
 export const protectEducator = async (req,res,next) => {
 
     try {
 
-        const userId = req.auth.userId
+        const userId = req.auth?.userId
+
+        if (!userId) {
+            return res.json({success:false, message: 'Unauthorized Access'})
+        }
         
         const response = await clerkClient.users.getUser(userId)
 

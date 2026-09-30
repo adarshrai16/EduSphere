@@ -7,6 +7,17 @@ import humanizeDuration from "humanize-duration";
 
 export const AppContext = createContext()
 
+const shouldToastError = (message) => {
+    if (!message) return false
+    const ignored = [
+        'User Not Found',
+        "Cannot read properties of null (reading 'enrolledCourses')",
+        'A valid resource ID is required.',
+        'Not authenticated',
+    ]
+    return !ignored.includes(message)
+}
+
 export const AppContextProvider = (props) => {
 
     const backendUrl = import.meta.env.VITE_BACKEND_URL
@@ -31,12 +42,12 @@ export const AppContextProvider = (props) => {
 
             if (data.success) {
                 setAllCourses(data.courses)
-            } else {
+            } else if (shouldToastError(data.message)) {
                 toast.error(data.message)
             }
 
         } catch (error) {
-            toast.error(error.message)
+            if (shouldToastError(error.message)) toast.error(error.message)
         }
 
     }
@@ -46,23 +57,24 @@ export const AppContextProvider = (props) => {
 
         try {
 
-            if (user.publicMetadata.role === 'educator') {
+            if (user?.publicMetadata?.role === 'educator') {
                 setIsEducator(true)
             }
 
             const token = await getToken();
+            if (!token) return
 
             const { data } = await axios.get(backendUrl + '/api/user/data',
                 { headers: { Authorization: `Bearer ${token}` } })
 
             if (data.success) {
                 setUserData(data.user)
-            } else (
+            } else if (shouldToastError(data.message)) {
                 toast.error(data.message)
-            )
+            }
 
         } catch (error) {
-            toast.error(error.message)
+            if (shouldToastError(error.message)) toast.error(error.message)
         }
 
     }
@@ -70,16 +82,21 @@ export const AppContextProvider = (props) => {
     // Fetch User Enrolled Courses
     const fetchUserEnrolledCourses = async () => {
 
-        const token = await getToken();
+        try {
+            const token = await getToken();
+            if (!token) return
 
-        const { data } = await axios.get(backendUrl + '/api/user/enrolled-courses',
-            { headers: { Authorization: `Bearer ${token}` } })
+            const { data } = await axios.get(backendUrl + '/api/user/enrolled-courses',
+                { headers: { Authorization: `Bearer ${token}` } })
 
-        if (data.success) {
-            setEnrolledCourses(data.enrolledCourses.reverse())
-        } else (
-            toast.error(data.message)
-        )
+            if (data.success) {
+                setEnrolledCourses([...(data.enrolledCourses || [])].reverse())
+            } else if (shouldToastError(data.message)) {
+                toast.error(data.message)
+            }
+        } catch (error) {
+            if (shouldToastError(error.message)) toast.error(error.message)
+        }
 
     }
 
@@ -111,7 +128,7 @@ export const AppContextProvider = (props) => {
 
     const calculateRating = (course) => {
 
-        if (course.courseRatings.length === 0) {
+        if (!course?.courseRatings?.length) {
             return 0
         }
 

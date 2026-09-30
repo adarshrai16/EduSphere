@@ -3,13 +3,18 @@ import Course from '../models/Course.js';
 import { Purchase } from '../models/Purchase.js';
 import User from '../models/User.js';
 import { clerkClient } from '@clerk/express'
+import { getRequestUserId } from '../utils/auth.js'
 
 // update role to educator
 export const updateRoleToEducator = async (req, res) => {
 
     try {
 
-        const userId = req.auth.userId
+        const userId = getRequestUserId(req)
+
+        if (!userId) {
+            return res.json({ success: false, message: 'Not authenticated' })
+        }
 
         await clerkClient.users.updateUserMetadata(userId, {
             publicMetadata: {
@@ -34,7 +39,11 @@ export const addCourse = async (req, res) => {
 
         const imageFile = req.file
 
-        const educatorId = req.auth.userId
+        const educatorId = getRequestUserId(req)
+
+        if (!educatorId) {
+            return res.json({ success: false, message: 'Not authenticated' })
+        }
 
         if (!imageFile) {
             return res.json({ success: false, message: 'Thumbnail Not Attached' })
@@ -65,7 +74,11 @@ export const addCourse = async (req, res) => {
 export const getEducatorCourses = async (req, res) => {
     try {
 
-        const educator = req.auth.userId
+        const educator = getRequestUserId(req)
+
+        if (!educator) {
+            return res.json({ success: false, message: 'Not authenticated' })
+        }
 
         const courses = await Course.find({ educator })
 
@@ -79,7 +92,11 @@ export const getEducatorCourses = async (req, res) => {
 // Get Educator Dashboard Data ( Total Earning, Enrolled Students, No. of Courses)
 export const educatorDashboardData = async (req, res) => {
     try {
-        const educator = req.auth.userId;
+        const educator = getRequestUserId(req);
+
+        if (!educator) {
+            return res.json({ success: false, message: 'Not authenticated' })
+        }
 
         const courses = await Course.find({ educator });
 
@@ -126,7 +143,11 @@ export const educatorDashboardData = async (req, res) => {
 // Get Enrolled Students Data with Purchase Data
 export const getEnrolledStudentsData = async (req, res) => {
     try {
-        const educator = req.auth.userId;
+        const educator = getRequestUserId(req);
+
+        if (!educator) {
+            return res.json({ success: false, message: 'Not authenticated' })
+        }
 
         // Fetch all courses created by the educator
         const courses = await Course.find({ educator });

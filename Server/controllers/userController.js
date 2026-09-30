@@ -3,6 +3,7 @@ import { CourseProgress } from "../models/CourseProgress.js"
 import { Purchase } from "../models/Purchase.js"
 import User from "../models/User.js"
 import stripe from "stripe"
+import { getOrCreateUser, getRequestUserId } from "../utils/auth.js"
 
 
 
@@ -10,9 +11,13 @@ import stripe from "stripe"
 export const getUserData = async (req, res) => {
     try {
 
-        const userId = req.auth.userId
+        const userId = getRequestUserId(req)
 
-        const user = await User.findById(userId)
+        if (!userId) {
+            return res.json({ success: false, message: 'Not authenticated' })
+        }
+
+        const user = await getOrCreateUser(userId)
 
         if (!user) {
             return res.json({ success: false, message: 'User Not Found' })
@@ -34,10 +39,14 @@ export const purchaseCourse = async (req, res) => {
         const { origin } = req.headers
 
 
-        const userId = req.auth.userId
+        const userId = getRequestUserId(req)
+
+        if (!userId || !courseId) {
+            return res.json({ success: false, message: 'Data Not Found' })
+        }
 
         const courseData = await Course.findById(courseId)
-        const userData = await User.findById(userId)
+        const userData = await getOrCreateUser(userId)
 
         if (!userData || !courseData) {
             return res.json({ success: false, message: 'Data Not Found' })
@@ -93,10 +102,13 @@ export const userEnrolledCourses = async (req, res) => {
 
         const userId = req.auth.userId
 
-        const userData = await User.findById(userId)
-            .populate('enrolledCourses')
+const userData = await User.findById(userId).populate('enrolledCourses')
 
-        res.json({ success: true, enrolledCourses: userData.enrolledCourses })
+if (!userData) {
+    return res.json({ success: false, message: 'User Not Found' })
+}
+
+res.json({ success: true, enrolledCourses: userData.enrolledCourses })
 
     } catch (error) {
         res.json({ success: false, message: error.message })
@@ -109,7 +121,7 @@ export const updateUserCourseProgress = async (req, res) => {
 
     try {
 
-        const userId = req.auth.userId
+        const userId = getRequestUserId(req)
 
         const { courseId, lectureId } = req.body
 
@@ -147,7 +159,7 @@ export const getUserCourseProgress = async (req, res) => {
 
     try {
 
-        const userId = req.auth.userId
+        const userId = getRequestUserId(req)
 
         const { courseId } = req.body
 
@@ -164,7 +176,7 @@ export const getUserCourseProgress = async (req, res) => {
 // Add User Ratings to Course
 export const addUserRating = async (req, res) => {
 
-    const userId = req.auth.userId;
+    const userId = getRequestUserId(req);
     const { courseId, rating } = req.body;
 
     // Validate inputs
