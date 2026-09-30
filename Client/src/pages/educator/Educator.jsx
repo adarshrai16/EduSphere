@@ -1,25 +1,18 @@
-import React from 'react'
-import { Outlet } from 'react-router-dom'
+import React from 'react';
+import { Outlet } from 'react-router-dom';
+import SideBar from '../../components/educator/SideBar';
+import Navbar from '../../components/educator/Navbar';
+import Footer from '../../components/educator/Footer';
 
-import Navbar from '../../components/educator/Navbar'
-import Sidebar from '../../components/educator/Sidebar'
-import Footer from '../../components/educator/Fotter'
-
-const Educator = () => {
-  return (
-    <div className="min-h-screen bg-slate-50 text-slate-800">
-      <Navbar />
-      <div className="flex min-h-[calc(100vh-72px)] flex-col md:flex-row">
-        <Sidebar />
-        <div className="flex min-w-0 flex-1 flex-col">
-          <main className="w-full flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-9">
-            <Outlet />
-          </main>
-          <Footer />
-        </div>
-      </div>
+const Educator = () => (
+  <div className="educator">
+    <Navbar />
+    <div className="educator-body">
+      <SideBar />
+      <main className="educator-main"><Outlet /></main>
     </div>
-  )
-}
+    <Footer />
+  </div>
+);
 
-export default Educator
+export default Educator;

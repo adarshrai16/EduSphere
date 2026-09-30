@@ -1,145 +1,159 @@
-import { useContext, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { AppContext } from '../../context/AppContext'
+import React,{useContext,useEffect,useRef,useState} from 'react';
+import {assets} from '../../assets/assets';
+import {toast} from 'react-toastify';
+import Quill from 'quill';
+import uniqid from 'uniqid';
+import axios from 'axios';
+import {AppContext} from '../../context/AppContext';
 
-const AddCourse = () => {
-  const { addCourse } = useContext(AppContext)
-  const navigate = useNavigate()
-  const [formData, setFormData] = useState({
-    courseTitle: '',
-    courseDescription: '',
-    coursePrice: '',
-    discount: '',
-    courseThumbnail: ''
-  })
-  const [error, setError] = useState('')
+const AddCourse=()=>{
+  const editorRef=useRef(null),quillRef=useRef(null);
+  const {backendUrl,getToken}=useContext(AppContext);
+  const [courseTitle,setCourseTitle]=useState(''),[coursePrice,setCoursePrice]=useState(0),[discount,setDiscount]=useState(0),[image,setImage]=useState(null),[chapters,setChapters]=useState([]),[showPopup,setShowPopup]=useState(false),[currentChapterId,setCurrentChapterId]=useState(null);
+  const [lectureDetails,setLectureDetails]=useState({lectureTitle:'',lectureDuration:'',lectureUrl:'',isPreviewFree:false});
 
-  const handleChange = (event) => {
-    const { name, value } = event.target
-    setFormData((current) => ({ ...current, [name]: value }))
-  }
+  const handleChapter=(action,id)=>{
+    if(action==='add'){
+      const title=prompt('Enter Chapter Name:');
+      if(title)setChapters([...chapters,{chapterId:uniqid(),chapterTitle:title,chapterContent:[],collapsed:false,chapterOrder:chapters.length?chapters.at(-1).chapterOrder+1:1}]);
+    }else if(action==='remove')setChapters(chapters.filter(c=>c.chapterId!==id));
+    else setChapters(chapters.map(c=>c.chapterId===id?{...c,collapsed:!c.collapsed}:c));
+  };
 
-  const handleSubmit = (event) => {
-    event.preventDefault()
+  const handleLecture=(action,chapterId,index)=>{
+    if(action==='add'){setCurrentChapterId(chapterId);setShowPopup(true);}
+    else setChapters(chapters.map(c=>c.chapterId===chapterId?{...c,chapterContent:c.chapterContent.filter((_,i)=>i!==index)}:c));
+  };
 
-    if (!formData.courseTitle.trim() || !formData.courseDescription.trim()) {
-      setError('Add a course title and description before continuing.')
-      return
-    }
+  const addLecture=()=>{
+    setChapters(chapters.map(c=>c.chapterId===currentChapterId?{...c,chapterContent:[...c.chapterContent,{...lectureDetails,lectureOrder:c.chapterContent.length?c.chapterContent.at(-1).lectureOrder+1:1,lectureId:uniqid()}]}:c));
+    setShowPopup(false);
+    setLectureDetails({lectureTitle:'',lectureDuration:'',lectureUrl:'',isPreviewFree:false});
+  };
 
-    addCourse(formData)
-    navigate('/educator/mycourse')
-  }
+  const handleSubmit=async e=>{
+    e.preventDefault();
+    try{
+      if(!image)return toast.error('Thumbnail Not Selected');
+      const courseData={courseTitle,courseDescription:quillRef.current.root.innerHTML,coursePrice:Number(coursePrice),discount:Number(discount),courseContent:chapters};
+      const formData=new FormData();
+      formData.append('courseData',JSON.stringify(courseData));
+      formData.append('image',image);
+      const token=await getToken();
+      const {data}=await axios.post(backendUrl+'/api/educator/add-course',formData,{headers:{Authorization:`Bearer ${token}`}});
+      if(data.success){
+        toast.success(data.message);
+        setCourseTitle('');setCoursePrice(0);setDiscount(0);setImage(null);setChapters([]);
+        quillRef.current.root.innerHTML='';
+      }else toast.error(data.message);
+    }catch(error){toast.error(error.message);}
+  };
 
-  return (
-    <section className="mx-auto max-w-5xl">
-      <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">Course library</p>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Create a course</h1>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">Set up the essentials now. You can add chapters and lessons from your course list later.</p>
-        </div>
-        <button
-          type="button"
-          onClick={() => navigate('/educator/mycourse')}
-          className="w-fit rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-        >
-          View my courses
-        </button>
-      </div>
+  useEffect(()=>{
+    if(!quillRef.current&&editorRef.current)
+      quillRef.current=new Quill(editorRef.current,{theme:'snow'});
+  },[]);
 
-      <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
-        <div className="space-y-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
-          <div className="border-b border-slate-100 pb-4">
-            <h2 className="text-base font-semibold text-slate-900">Course details</h2>
-            <p className="mt-1 text-sm text-slate-500">Start with the information learners will see first.</p>
-          </div>
+  return(
+    <div className="add-course-page">
+      <form onSubmit={handleSubmit} className="add-course-form">
 
-          <label className="block">
-            <span className="mb-2 block text-sm font-medium text-slate-700">Course title</span>
-            <input
-              name="courseTitle"
-              value={formData.courseTitle}
-              onChange={handleChange}
-              required
-              maxLength={100}
-              placeholder="e.g. Practical Web Development"
-              className="w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-            />
-          </label>
-
-          <label className="block">
-            <span className="mb-2 block text-sm font-medium text-slate-700">Description</span>
-            <textarea
-              name="courseDescription"
-              value={formData.courseDescription}
-              onChange={handleChange}
-              required
-              rows={6}
-              placeholder="What will learners be able to do after completing this course?"
-              className="w-full resize-y rounded-lg border border-slate-300 px-3.5 py-3 text-sm leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-            />
-          </label>
-
-          <label className="block">
-            <span className="mb-2 block text-sm font-medium text-slate-700">Thumbnail image URL</span>
-            <input
-              name="courseThumbnail"
-              type="url"
-              value={formData.courseThumbnail}
-              onChange={handleChange}
-              placeholder="https://example.com/course-cover.jpg"
-              className="w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-            />
-            <span className="mt-1.5 block text-xs text-slate-500">Leave blank to use the default course cover.</span>
-          </label>
+        <div className="form-group">
+          <p>Course Title</p>
+          <input value={courseTitle} onChange={e=>setCourseTitle(e.target.value)} placeholder="Type here" required/>
         </div>
 
-        <div className="flex flex-col gap-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <div>
-            <h2 className="text-base font-semibold text-slate-900">Pricing</h2>
-            <p className="mt-1 text-sm text-slate-500">Choose the initial course price.</p>
+        <div className="form-group">
+          <p>Course Description</p>
+          <div ref={editorRef} className="course-editor"/>
+        </div>
+
+        <div className="course-info-row">
+          <div className="form-group">
+            <p>Course Price</p>
+            <input value={coursePrice} onChange={e=>setCoursePrice(e.target.value)} type="number" placeholder="0" required/>
           </div>
 
-          <label className="block">
-            <span className="mb-2 block text-sm font-medium text-slate-700">Price (USD)</span>
-            <input
-              name="coursePrice"
-              type="number"
-              min="0"
-              step="0.01"
-              value={formData.coursePrice}
-              onChange={handleChange}
-              required
-              placeholder="49.00"
-              className="w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-            />
-          </label>
-
-          <label className="block">
-            <span className="mb-2 block text-sm font-medium text-slate-700">Discount (%)</span>
-            <input
-              name="discount"
-              type="number"
-              min="0"
-              max="100"
-              value={formData.discount}
-              onChange={handleChange}
-              placeholder="0"
-              className="w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-            />
-          </label>
-
-          <div className="mt-auto border-t border-slate-100 pt-5">
-            {error && <p className="mb-3 text-sm text-rose-700" role="alert">{error}</p>}
-            <button type="submit" className="w-full rounded-lg bg-blue-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700">
-              Create course
-            </button>
+          <div className="thumbnail-group">
+            <p>Thumbnail</p>
+            <label htmlFor="thumbnailImage">
+              <img src={assets.file_upload_icon} className="upload-icon"/>
+              <input id="thumbnailImage" type="file" onChange={e=>setImage(e.target.files[0])} accept="image/*" hidden/>
+              {image&&<img className="thumbnail-preview" src={URL.createObjectURL(image)} alt=""/>}
+            </label>
           </div>
         </div>
+
+        <div className="form-group">
+          <p>Discount %</p>
+          <input value={discount} onChange={e=>setDiscount(e.target.value)} type="number" min="0" max="100" placeholder="0" required/>
+        </div>
+
+        <div className="chapters">
+          {chapters.map((chapter,i)=>(
+            <div key={chapter.chapterId} className="chapter">
+              <div className="chapter-header">
+                <div className="chapter-title">
+                  <img src={assets.dropdown_icon} className={chapter.collapsed?'rotate':''} onClick={()=>handleChapter('toggle',chapter.chapterId)}/>
+                  <span>{i+1}. {chapter.chapterTitle}</span>
+                </div>
+                <span>{chapter.chapterContent.length} Lectures</span>
+                <img src={assets.cross_icon} className="delete-icon" onClick={()=>handleChapter('remove',chapter.chapterId)}/>
+              </div>
+
+              {!chapter.collapsed&&(
+                <div className="lecture-list">
+                  {chapter.chapterContent.map((lecture,j)=>(
+                    <div key={lecture.lectureId} className="lecture">
+                      <span>{j+1}. {lecture.lectureTitle} - {lecture.lectureDuration} mins - <a href={lecture.lectureUrl} target="_blank" rel="noreferrer">Link</a> - {lecture.isPreviewFree?'Free Preview':'Paid'}</span>
+                      <img src={assets.cross_icon} className="delete-icon" onClick={()=>handleLecture('remove',chapter.chapterId,j)}/>
+                    </div>
+                  ))}
+                  <button type="button" className="add-lecture" onClick={()=>handleLecture('add',chapter.chapterId)}>+ Add Lecture</button>
+                </div>
+              )}
+            </div>
+          ))}
+
+          <button type="button" className="add-chapter" onClick={()=>handleChapter('add')}>+ Add Chapter</button>
+
+          {showPopup&&(
+            <div className="popup-overlay">
+              <div className="lecture-popup">
+                <h2>Add Lecture</h2>
+
+                <div className="popup-field">
+                  <p>Lecture Title</p>
+                  <input value={lectureDetails.lectureTitle} onChange={e=>setLectureDetails({...lectureDetails,lectureTitle:e.target.value})}/>
+                </div>
+
+                <div className="popup-field">
+                  <p>Duration (minutes)</p>
+                  <input type="number" value={lectureDetails.lectureDuration} onChange={e=>setLectureDetails({...lectureDetails,lectureDuration:e.target.value})}/>
+                </div>
+
+                <div className="popup-field">
+                  <p>Lecture URL</p>
+                  <input value={lectureDetails.lectureUrl} onChange={e=>setLectureDetails({...lectureDetails,lectureUrl:e.target.value})}/>
+                </div>
+
+                <label className="preview-check">
+                  <span>Is Preview Free?</span>
+                  <input type="checkbox" checked={lectureDetails.isPreviewFree} onChange={e=>setLectureDetails({...lectureDetails,isPreviewFree:e.target.checked})}/>
+                </label>
+
+                <button type="button" className="add-btn" onClick={addLecture}>Add</button>
+                <img src={assets.cross_icon} className="popup-close" onClick={()=>setShowPopup(false)}/>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <button type="submit" className="submit-btn">ADD</button>
       </form>
-    </section>
-  )
-}
+    </div>
+  );
+};
 
-export default AddCourse
+export default AddCourse;
+

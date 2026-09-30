@@ -1,99 +1,50 @@
-import React from 'react'
-import { assets } from '../../assets/assets'
+import React from 'react';
+import { assets } from '../../assets/assets';
 
 const Footer = () => {
   return (
     <footer className="footer">
-
-      <div className="footer-content">
-
-        <div className="footer-section footer-brand">
-
-          <img
-            src={assets.logo_dark}
-            alt="logo"
-          />
-
+      <div className="footer-top">
+        
+        <div className="footer-brand">
+          <img src={assets.logo} alt="Edusphere" />
           <p>
-            Lorem Ipsum is simply dummy text of the printing and
-            typesetting industry. Lorem Ipsum has been the
-            industry's standard dummy text.
+            Lorem ipsum is simply dummy text of the printing
+            and typesetting industry.
           </p>
-
         </div>
 
-        <div className="footer-section footer-company">
-
-          <h2>
-            Company
-          </h2>
-
-          <ul>
-
-            <li>
-              <a href="#">
-                Home
-              </a>
-            </li>
-
-            <li>
-              <a href="#">
-                About us
-              </a>
-            </li>
-
-            <li>
-              <a href="#">
-                Contact us
-              </a>
-            </li>
-
-            <li>
-              <a href="#">
-                Privacy policy
-              </a>
-            </li>
-
-          </ul>
-
+        <div className="footer-company">
+          <h2>Company</h2>
+          <a href="/">Home</a>
+          <a href="/about">About us</a>
+          <a href="/contact">Contact us</a>
+          <a href="/privacy-policy">Privacy policy</a>
         </div>
 
-
-        <div className="footer-section footer-newsletter">
-
-          <h2>
-            Subscribe to our newsletter
-          </h2>
-
+        <div className="footer-newsletter">
+          <h2>Subscribe to our newsletter</h2>
           <p>
-            The latest news, articles, and resources,
-            sent to your inbox weekly.
+            The latest news, articles, and resources, sent to
+            your inbox weekly.
           </p>
 
-
-          <div className="newsletter-form">
-
+          <form className="newsletter-form">
             <input
               type="email"
               placeholder="Enter your email"
             />
-
-            <button>
-              Subscribe
-            </button>
-
-          </div>
-
+            <button type="submit">Subscribe</button>
+          </form>
         </div>
 
       </div>
 
-      <p className="footer-copyright">
-        Copyright 2026 © EduSphere. All Right Reserved.
-      </p>
-
+      <div className="footer-bottom">
+        Copyright 2025 © GreatStack. All Right Reserved.
+      </div>
     </footer>
-  )
-}
+  );
+};
 
-export default Footer
+export default Footer;

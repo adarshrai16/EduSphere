@@ -1,37 +1,28 @@
-import React from 'react'
-import { assets } from '../../assets/assets'
+import React from 'react';
+import { assets } from '../../assets/assets';
 
-const CalltoAction = () => {
+const CallToAction = () => {
   return (
-    <div className="call-to-action">
-
-      <h1>
-        Learn anything, anytime, anywhere
-      </h1>
+    <section className="call-to-action">
+      <h1>Learn anything, anytime, anywhere</h1>
 
       <p>
-        Incididunt sint fugiat pariatur cupidata consectetur sit cillum
+        Incididunt sint fugiat pariatur cupidatat consectetur sit cillum
         anim id veniam aliqua proident excepteur commodo do ea.
       </p>
 
       <div className="cta-buttons">
-
-        <button className="get-started-btn">
+        <button className="cta-primary">
           Get started
         </button>
 
-        <button className="learn-more-btn">
+        <button className="cta-secondary">
           Learn more
-          <img
-            src={assets.arrow_icon}
-            alt="arrow_icon"
-          />
+          <img src={assets.arrow_icon} alt="arrow" />
         </button>
-
       </div>
+    </section>
+  );
+};
 
-    </div>
-  )
-}
-
-export default CalltoAction
+export default CallToAction;

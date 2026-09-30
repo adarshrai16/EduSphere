@@ -1,16 +1,11 @@
 import React, { useContext } from 'react'
+import { Link } from 'react-router-dom'
 import { assets } from '../../assets/assets'
 import { AppContext } from '../../context/AppContext'
-import { Link } from 'react-router-dom'
 
 const CourseCard = ({ course }) => {
-
   const { currency, calculateRating } = useContext(AppContext)
-
   const rating = calculateRating(course)
-
-  const finalPrice =
-    course.coursePrice - (course.discount * course.coursePrice) / 100
 
   return (
     <Link
@@ -18,55 +13,56 @@ const CourseCard = ({ course }) => {
       onClick={() => scrollTo(0, 0)}
       className="course-card"
     >
-
-      {/* Course image */}
       <img
         src={course.courseThumbnail}
         alt={course.courseTitle}
-        className="course-thumbnail"
+        className="course-card-image"
       />
 
       <div className="course-card-content">
-
-        {/* Course title */}
-        <h3 className="course-title">
+        <h3 className="course-card-title">
           {course.courseTitle}
         </h3>
 
-        {/* Rating */}
-        <div className="course-rating">
+        <p className="course-card-educator">
+          {course.educator?.name || 'EduSphere'}
+        </p>
 
-          <span className="rating-number">
+        <div className="course-card-rating">
+          <span className="rating-value">
             {rating.toFixed(1)}
           </span>
 
           <div className="rating-stars">
-            {[0, 1, 2, 3, 4].map((i) => (
+            {[...Array(5)].map((_, i) => (
               <img
                 key={i}
-                src={i < Math.floor(rating)
-                  ? assets.star
-                  : assets.star_blank}
+                src={
+                  i < Math.floor(rating)
+                    ? assets.star
+                    : assets.star_blank
+                }
                 alt=""
               />
             ))}
           </div>
 
           <span className="rating-count">
-            ({course.courseRatings.length})
+            ({course.courseRatings?.length || 0})
           </span>
-
         </div>
 
-        {/* Price */}
-        <p className="course-price">
-          {currency}{finalPrice.toFixed(2)}
+        <p className="course-card-price">
+          {currency}
+          {(
+            course.coursePrice -
+            (course.discount * course.coursePrice) / 100
+          ).toFixed(2)}
         </p>
-
       </div>
-
     </Link>
   )
 }
 
 export default CourseCard
+

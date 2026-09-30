@@ -1,95 +1,125 @@
 import React, { useContext } from 'react'
 import { assets } from '../../assets/assets'
 import { Link, useLocation } from 'react-router-dom'
-import { useClerk, UserButton, useUser } from '@clerk/clerk-react'
 import { AppContext } from '../../context/AppContext'
+import { useClerk, UserButton, useUser } from '@clerk/clerk-react'
+import { toast } from 'react-toastify'
+import axios from 'axios'
+
 
 const Navbar = () => {
+  const location = useLocation()
+  const isCoursesListPage = location.pathname.includes('/course-list')
 
-    const { navigate, isEducator } = useContext(AppContext)
+  const {
+    backendUrl,
+    isEducator,
+    setIsEducator,
+    navigate,
+    getToken
+  } = useContext(AppContext)
 
-    const location = useLocation()
+  const { openSignIn } = useClerk()
+  const { user } = useUser()
 
-    const isCourseListPage =
-        location.pathname.includes('/courselist')
+  const becomeEducator = async () => {
+    try {
+      if (isEducator) {
+        navigate('/educator')
+        return
+      }
 
-    const { openSignIn } = useClerk()
-    const { user } = useUser()
+      const token = await getToken()
 
-    return (
-        <nav
-            className={
-                isCourseListPage
-                    ? 'navbar navbar-course-list'
-                    : 'navbar'
-            }
-        >
+      const { data } = await axios.get(
+        `${backendUrl}/api/educator/update-role`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      )
 
-            <img
-                onClick={() => navigate('/')}
-                src={assets.logo}
-                alt="Logo"
-                className="navbar-logo"
-            />
+      if (data.success) {
+        toast.success(data.message)
+        setIsEducator(true)
+      } else {
+        toast.error(data.message)
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message)
+    }
+  }
 
-            {/* Desktop */}
+  return (
+    <nav className={`student-navbar ${isCoursesListPage ? 'navbar-white' : 'navbar-cyan'}`}>
+      
+      <img
+        src={assets.logo}
+        alt="Logo"
+        className="student-navbar-logo"
+        onClick={() => navigate('/')}
+      />
 
-            <div className="navbar-desktop">
+      {/* Desktop */}
+      <div className="navbar-desktop-menu">
+        {user && (
+          <div className="navbar-links">
+            <button onClick={becomeEducator}>
+              {isEducator ? 'Educator Dashboard' : 'Become Educator'}
+            </button>
 
-                <div className="navbar-links">
+            <span className="navbar-divider">|</span>
 
-                    {user && (
-                        <button
-                            onClick={() => navigate('/educator')}
-                        >
-                            {isEducator
-                                ? 'Educator Dashboard'
-                                : 'Become Educator'
-                            }
-                        </button>
-                    )}
+            <Link to="/my-enrollments">
+              My Enrollments
+            </Link>
+          </div>
+        )}
 
-                    {user && <span>|</span>}
+        {user ? (
+          <UserButton />
+        ) : (
+          <button
+            onClick={() => openSignIn()}
+            className="create-account-btn"
+          >
+            Create Account
+          </button>
+        )}
+      </div>
 
-                    {user && (
-                        <Link to="/myenrollments">
-                            My Enrollments
-                        </Link>
-                    )}
+      {/* Mobile */}
+      <div className="navbar-mobile-menu">
+        <div className="navbar-mobile-links">
+          <button onClick={becomeEducator}>
+            {isEducator ? 'Educator Dashboard' : 'Become Educator'}
+          </button>
 
-                </div>
+          {user && (
+            <>
+              <span>|</span>
+              <Link to="/my-enrollments">
+                My Enrollments
+              </Link>
+            </>
+          )}
+        </div>
 
-                {user ? (
-                    <UserButton />
-                ) : (
-                    <button
-                        onClick={() => openSignIn()}
-                        className="create-account-btn"
-                    >
-                        Create Account
-                    </button>
-                )}
+        {user ? (
+          <UserButton />
+        ) : (
+          <button
+            onClick={() => openSignIn()}
+            className="mobile-user-btn"
+          >
+            <img src={assets.user_icon} alt="Account" />
+          </button>
+        )}
+      </div>
 
-            </div>
-
-            {/* Mobile */}
-
-            {user ? (
-                <UserButton />
-            ) : (
-                <button
-                    onClick={() => openSignIn()}
-                    className="mobile-login-btn"
-                >
-                    <img
-                        src={assets.user_icon}
-                        alt="User"
-                    />
-                </button>
-            )}
-
-        </nav>
-    )
+    </nav>
+  )
 }
 
 export default Navbar

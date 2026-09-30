@@ -1,37 +1,32 @@
-import React from 'react'
-import { assets } from '../../assets/assets'
 
-const SearchBar = ({ search, setSearch }) => {
+import React, { useState } from 'react';
+import { assets } from '../../assets/assets';
+import { useNavigate } from 'react-router-dom';
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-  }
+const SearchBar = ({ data }) => {
+  const navigate = useNavigate();
+  const [input, setInput] = useState(data || '');
+
+  const onSearchHandler = (e) => {
+    e.preventDefault();
+    navigate('/course-list/' + input);
+  };
 
   return (
-    <div className="search-bar">
+    <form onSubmit={onSearchHandler} className="search-bar">
+      <img src={assets.search_icon} alt="search_icon" />
 
-      <form onSubmit={handleSubmit}>
+      <input
+        onChange={(e) => setInput(e.target.value)}
+        value={input}
+        type="text"
+        placeholder="Search for courses"
+      />
 
-        <img
-          src={assets.search_icon}
-          alt="Search"
-        />
+      <button type="submit">Search</button>
+    </form>
+  );
+};
 
-        <input
-          type="text"
-          placeholder="Search for courses"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+export default SearchBar;
 
-        <button type="submit">
-          Search
-        </button>
-
-      </form>
-
-    </div>
-  )
-}
-
-export default SearchBar
