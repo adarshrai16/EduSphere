@@ -187,6 +187,7 @@ input {
 .navbar-links button,
 .navbar-links a {
   font-size: 14px;
+  text-decoration: none;
 }
 
 .navbar-links button:hover,
@@ -199,6 +200,7 @@ input {
 .navbar-links a,
 .navbar-mobile-links a {
   color: #6b7280;
+  text-decoration: none;
 }
 
 .navbar-divider {
@@ -463,8 +465,9 @@ input {
 }
 
 .home-courses {
-  width: 100%;
-  padding: 64px 9%;
+  width: min(1200px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 64px 0;
   text-align: left;
 }
 
@@ -486,9 +489,9 @@ input {
 .home-course-grid {
   margin: 32px 0;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: stretch;
-  gap: 16px;
+  gap: 20px;
 }
 
 .all-courses-link {
