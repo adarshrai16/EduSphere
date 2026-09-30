@@ -276,8 +276,8 @@ export const addUserRating = async (req, res) => {
 
         const user = await User.findById(userId);
 
-        if (!user || !user.enrolledCourses.some(enrolledId => String(enrolledId) === String(course._id))) {
-            return res.json({ success: false, message: 'User has not purchased this course.' });
+        if (!user) {
+            return res.json({ success: false, message: 'User not found.' });
         }
 
         // Check is user already rated
