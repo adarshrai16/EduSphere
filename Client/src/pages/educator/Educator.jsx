@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import SideBar from '../../components/educator/SideBar';
+import Sidebar from '../../components/educator/Sidebar';
 import Navbar from '../../components/educator/Navbar';
 import Footer from '../../components/educator/Footer';
 
@@ -8,7 +8,7 @@ const Educator = () => (
   <div className="educator">
     <Navbar />
     <div className="educator-body">
-      <SideBar />
+      <Sidebar />
       <main className="educator-main"><Outlet /></main>
     </div>
     <Footer />
