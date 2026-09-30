@@ -94,7 +94,7 @@ Use two terminals from the repository root.
 
 ### 1. Configure the server
 
-Create `Server/.env` with the server settings listed below. Use a MongoDB database you can access, and keep credentials out of source control.
+Copy `Server/.env.example` to `Server/.env` and fill in the server settings. Use a MongoDB database you can access, and keep credentials out of source control.
 
 ```env
 PORT=5000
@@ -118,7 +118,7 @@ CLOUDINARY_SECRET_KEY=<cloudinary-api-secret>
 
 ### 2. Configure the client
 
-Create `Client/.env`:
+Copy `Client/.env.example` to `Client/.env`:
 
 ```env
 VITE_CLERK_PUBLISHABLE_KEY=<clerk-publishable-key>
@@ -155,6 +155,47 @@ Vite prints the local client URL, usually `http://localhost:5173`. The API healt
 
 Restart the relevant process after changing environment variables. Never commit real `.env` values.
 
+## Deploy To Vercel
+
+Deploy the client and server as **two Vercel projects from the same Git repository**. Each project uses its own subdirectory as the Root Directory, so each gets independent build settings and environment variables.
+
+### Backend project
+
+1. Import the repository into Vercel and set **Root Directory** to `Server`.
+2. Keep the included `Server/vercel.json` configuration. It routes requests to the Express app, which is exported as a Vercel serverless handler. Local development still starts the same app with `npm run server`.
+3. Add the server variables from `Server/.env.example` in the Vercel project's **Settings → Environment Variables**. Use production credentials for production deployments. Set `MONGODB_URI` to the intended database; `MONGODB_DB` is optional and overrides the database name in that URI.
+4. Deploy, then confirm `https://<backend-domain>/` returns `API Working`.
+
+### Frontend project
+
+1. Create a second Vercel project from the same repository and set **Root Directory** to `Client`.
+2. Use the Vite framework preset, build command `npm run build`, and output directory `dist`. The included `Client/vercel.json` rewrites client-side routes to the SPA entry point.
+3. Add these variables in the frontend project's **Settings → Environment Variables**:
+
+	```env
+	VITE_BACKEND_URL=https://<backend-domain>
+	VITE_CLERK_PUBLISHABLE_KEY=<production-clerk-publishable-key>
+	VITE_CURRENCY=$
+	```
+
+	Use the backend's origin only in `VITE_BACKEND_URL` (no `/api` suffix and no trailing slash). Vite embeds `VITE_` variables at build time, so redeploy the frontend after changing one.
+4. Deploy and test the frontend's production URL. Confirm course listings load from the backend domain and educator actions reach the same API.
+
+### Connect production integrations
+
+- In Clerk, add the frontend production domain to the Clerk application's allowed origins/domains. Point the Clerk webhook to `https://<backend-domain>/clerk` and use its production signing secret as `CLERK_WEBHOOK_SECRET`.
+- In Stripe, point the production webhook to `https://<backend-domain>/stripe`, subscribe to the checkout completion and payment failure/expiration events handled by the server, and set the endpoint's signing secret as `STRIPE_WEBHOOK_SECRET`.
+- Confirm the MongoDB provider permits connections from the deployed Vercel backend. Keep database credentials and all secret keys in the Vercel backend environment settings, never in frontend variables or source files.
+- If an environment variable changes in Vercel, redeploy the affected project. Frontend `VITE_` values belong only to the frontend project; MongoDB, Clerk secret, Stripe secret/webhook, and Cloudinary credentials belong only to the backend project.
+
+### Post-deployment smoke check
+
+1. Open the frontend production URL and confirm the public course catalog loads.
+2. Sign in with Clerk and check that `/api/user/data` succeeds through the frontend.
+3. As an educator, add a course and confirm it appears in the catalog and in MongoDB.
+4. Complete a Stripe test-mode checkout and verify the purchase changes to `completed` and the learner appears in the enrolled course.
+5. Open an enrolled course, complete a lesson, and confirm a `CourseProgress` document is created or updated.
+
 ## Project Structure
 
 ```text
@@ -166,6 +207,8 @@ EduSphere/
 │   │   ├── pages/            # Student and educator routes
 │   │   └── assets/           # Images, icons, and static course data
 │   ├── package.json
+│   ├── .env.example
+│   ├── vercel.json
 │   └── vite.config.js
 ├── Server/
 │   ├── configs/              # MongoDB, Cloudinary, and upload setup
@@ -175,6 +218,8 @@ EduSphere/
 │   ├── routes/               # Express API routes
 │   ├── utils/                # Auth and Stripe helpers
 │   ├── server.js
+│   ├── .env.example
+│   ├── vercel.json
 │   └── package.json
 └── README.md
 ```

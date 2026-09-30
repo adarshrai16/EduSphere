@@ -31,6 +31,10 @@ app.use('/api/user', express.json(), userRouter)
 // Port
 const PORT = process.env.PORT || 5000
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-})
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  })
+}
+
+export default app
