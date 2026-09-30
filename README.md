@@ -230,7 +230,7 @@ Run from `Client/`:
 
 ```powershell
 npm run build
-npm run lint
+npm run dev
 ```
 
 Run from `Server/`:
@@ -239,15 +239,3 @@ Run from `Server/`:
 npm run server
 npm start
 ```
-
-The server package currently has no automated test script. Backend syntax can be checked with Node, for example `node --check controllers/userController.js` from `Server/`.
-
-## Interview Walkthrough
-
-> EduSphere is a React course platform backed by an Express and MongoDB API. Clerk provides authentication and educator roles, while user lifecycle webhooks keep MongoDB profiles synchronized. Educators publish courses whose metadata and curriculum are stored as Mongo documents and whose thumbnails are hosted on Cloudinary. For paid enrollment, the API creates a pending purchase and a Stripe Checkout Session; a signature-verified webhook records payment completion and updates both the user and course enrollment lists. Learner progress is stored separately per user and course, validated against the learner's enrollment and the course's lecture IDs, and updated idempotently. The educator dashboard reads the same persisted course, purchase, and enrollment data.
-
-## Design Notes
-
-- A successful redirect from Stripe is not treated as proof of payment; the signed webhook is the authority for completing a purchase and granting access.
-- Enrollment and lecture-progress writes are retry-safe to reduce duplicate data when requests or provider webhooks are repeated.
-- Clerk, Stripe, MongoDB, and Cloudinary are external services; a full integration test requires valid development credentials and reachable webhook URLs.
