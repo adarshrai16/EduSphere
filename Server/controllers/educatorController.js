@@ -1,6 +1,7 @@
 import { v2 as cloudinary } from 'cloudinary'
 import Course from '../models/Course.js';
 import { Purchase } from '../models/Purchase.js';
+import { CourseProgress } from '../models/CourseProgress.js';
 import User from '../models/User.js';
 import { clerkClient } from '@clerk/express'
 import { getRequestUserId } from '../utils/auth.js'
@@ -49,23 +50,21 @@ export const addCourse = async (req, res) => {
             return res.json({ success: false, message: 'Thumbnail Not Attached' })
         }
 
-        const parsedCourseData = await JSON.parse(courseData)
+        const parsedCourseData = JSON.parse(courseData)
 
         parsedCourseData.educator = educatorId
 
-        const newCourse = await Course.create(parsedCourseData)
-
         const imageUpload = await cloudinary.uploader.upload(imageFile.path)
+        const newCourse = await Course.create({
+            ...parsedCourseData,
+            courseThumbnail: imageUpload.secure_url
+        })
 
-        newCourse.courseThumbnail = imageUpload.secure_url
-
-        await newCourse.save()
-
-        res.json({ success: true, message: 'Course Added' })
+        res.status(201).json({ success: true, message: 'Course Added', course: newCourse })
 
     } catch (error) {
 
-        res.json({ success: false, message: error.message })
+        res.status(500).json({ success: false, message: error.message })
 
     }
 }
@@ -84,6 +83,34 @@ export const getEducatorCourses = async (req, res) => {
 
         res.json({ success: true, courses })
 
+    } catch (error) {
+        res.json({ success: false, message: error.message })
+    }
+}
+
+// Delete an educator's course and clear student enrollment references
+export const deleteCourse = async (req, res) => {
+    try {
+        const educator = getRequestUserId(req)
+
+        if (!educator) {
+            return res.json({ success: false, message: 'Not authenticated' })
+        }
+
+        const course = await Course.findOne({ _id: req.params.id, educator })
+
+        if (!course) {
+            return res.status(404).json({ success: false, message: 'Course not found' })
+        }
+
+        await Promise.all([
+            User.updateMany({ enrolledCourses: course._id }, { $pull: { enrolledCourses: course._id } }),
+            CourseProgress.deleteMany({ courseId: course._id.toString() })
+        ])
+
+        await course.deleteOne()
+
+        res.json({ success: true, message: 'Course deleted' })
     } catch (error) {
         res.json({ success: false, message: error.message })
     }

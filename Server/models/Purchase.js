@@ -11,6 +11,11 @@ const PurchaseSchema = new mongoose.Schema({
         required: true
     },
     amount: { type: Number, required: true },
+    currency: { type: String, required: true, lowercase: true },
+    stripeSessionId: { type: String, unique: true, sparse: true },
+    stripePaymentIntentId: { type: String, unique: true, sparse: true },
+    stripeLastEventId: { type: String },
+    stripeLastEventType: { type: String },
     status: { type: String, enum: ['pending', 'completed', 'failed'], default: 'pending' }
 
 }, { timestamps: true });

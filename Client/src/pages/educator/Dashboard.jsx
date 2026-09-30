@@ -4,6 +4,7 @@ import {AppContext} from '../../context/AppContext';
 import axios from 'axios';
 import {toast} from 'react-toastify';
 import Loading from '../../components/student/Loading';
+import { Link } from 'react-router-dom';
 
 const Dashboard=()=>{
   const {backendUrl,isEducator,currency,getToken}=useContext(AppContext);
@@ -20,59 +21,97 @@ const Dashboard=()=>{
 
   useEffect(()=>{if(isEducator)fetchDashboardData();},[isEducator]);
 
-  return dashboardData?(
+  if(!dashboardData)return <Loading/>;
+
+  const enrolments=dashboardData.enrolledStudentsData||[];
+
+  return(
     <div className="dashboard">
       <div className="dashboard-content">
+        <header className="dashboard-header">
+          <div>
+            <p className="dashboard-eyebrow">EDUCATOR OVERVIEW</p>
+            <h1>Dashboard</h1>
+            <p className="dashboard-subtitle">Your courses and student activity at a glance.</p>
+          </div>
+        </header>
 
-        <div className="stats">
-          <div className="stat-card">
-            <img src={assets.patients_icon} alt=""/>
-            <div><p className="stat-number">{dashboardData.enrolledStudentsData.length}</p><p>Total Enrolments</p></div>
+        <section className="dashboard-metrics" aria-label="Course overview">
+          <article className="dashboard-metric">
+            <span className="dashboard-metric-icon"><img src={assets.patients_icon} alt=""/></span>
+            <div className="dashboard-metric-copy">
+              <p className="dashboard-metric-label">Total Enrolments</p>
+              <p className="dashboard-metric-value">{enrolments.length.toLocaleString()}</p>
+            </div>
+          </article>
+
+          <article className="dashboard-metric">
+            <span className="dashboard-metric-icon"><img src={assets.appointments_icon} alt=""/></span>
+            <div className="dashboard-metric-copy">
+              <p className="dashboard-metric-label">Total Courses</p>
+              <p className="dashboard-metric-value">{dashboardData.totalCourses.toLocaleString()}</p>
+            </div>
+          </article>
+
+          <article className="dashboard-metric">
+            <span className="dashboard-metric-icon"><img src={assets.earning_icon} alt=""/></span>
+            <div className="dashboard-metric-copy">
+              <p className="dashboard-metric-label">Total Earnings</p>
+              <p className="dashboard-metric-value">{currency}{Math.floor(dashboardData.totalEarnings).toLocaleString()}</p>
+            </div>
+          </article>
+        </section>
+
+        <section className="dashboard-enrolments">
+          <div className="dashboard-section-heading">
+            <div>
+              <h2>Latest Enrolments</h2>
+              <p>Students who have joined your courses.</p>
+            </div>
+            <span>{enrolments.length} {enrolments.length===1?'student':'students'}</span>
           </div>
 
-          <div className="stat-card">
-            <img src={assets.appointments_icon} alt=""/>
-            <div><p className="stat-number">{dashboardData.totalCourses}</p><p>Total Courses</p></div>
-          </div>
-
-          <div className="stat-card">
-            <img src={assets.earning_icon} alt=""/>
-            <div><p className="stat-number">{currency}{Math.floor(dashboardData.totalEarnings)}</p><p>Total Earnings</p></div>
-          </div>
-        </div>
-
-        <div className="enrolments">
-          <h2>Latest Enrolments</h2>
-
-          <div className="table-container">
+          <div className="dashboard-table-container">
             <table>
               <thead>
                 <tr>
-                  <th className="number-col">#</th>
+                  <th className="dashboard-number-col">#</th>
                   <th>Student Name</th>
                   <th>Course Title</th>
                 </tr>
               </thead>
 
               <tbody>
-                {dashboardData.enrolledStudentsData.map((item,index)=>(
-                  <tr key={index}>
-                    <td className="number-col">{index+1}</td>
-                    <td className="student">
-                      <img src={item.student.imageUrl} alt="Profile"/>
-                      <span>{item.student.name}</span>
-                    </td>
-                    <td className="course-title">{item.courseTitle}</td>
-                  </tr>
-                ))}
+                {enrolments.length ? enrolments.map((item,index)=>(
+                    <tr key={`${item.student?._id||item.student?.name}-${item.courseTitle}-${index}`}>
+                      <td className="dashboard-number-col">{index+1}</td>
+                      <td className="dashboard-student">
+                        <img src={item.student?.imageUrl} alt=""/>
+                        <span>{item.student?.name||'Student'}</span>
+                      </td>
+                      <td className="dashboard-course-title">{item.courseTitle}</td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td className="dashboard-empty-cell" colSpan="3">
+                        <div className="dashboard-empty-state">
+                          <p>No enrolments yet</p>
+                          <span>When students join a course, they’ll appear here.</span>
+                          <Link to="/educator/add-course">
+                            <img src={assets.add_icon} alt=""/>
+                            Add a course
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
               </tbody>
             </table>
           </div>
-        </div>
-
+        </section>
       </div>
     </div>
-  ):<Loading/>;
+  );
 };
 
 export default Dashboard;

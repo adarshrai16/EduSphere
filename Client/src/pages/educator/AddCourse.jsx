@@ -8,7 +8,7 @@ import {AppContext} from '../../context/AppContext';
 
 const AddCourse=()=>{
   const editorRef=useRef(null),quillRef=useRef(null);
-  const {backendUrl,getToken}=useContext(AppContext);
+  const {backendUrl,getToken,fetchAllCourses}=useContext(AppContext);
   const [courseTitle,setCourseTitle]=useState(''),[coursePrice,setCoursePrice]=useState(0),[discount,setDiscount]=useState(0),[image,setImage]=useState(null),[chapters,setChapters]=useState([]),[showPopup,setShowPopup]=useState(false),[currentChapterId,setCurrentChapterId]=useState(null);
   const [lectureDetails,setLectureDetails]=useState({lectureTitle:'',lectureDuration:'',lectureUrl:'',isPreviewFree:false});
 
@@ -43,10 +43,11 @@ const AddCourse=()=>{
       const {data}=await axios.post(backendUrl+'/api/educator/add-course',formData,{headers:{Authorization:`Bearer ${token}`}});
       if(data.success){
         toast.success(data.message);
+        await fetchAllCourses();
         setCourseTitle('');setCoursePrice(0);setDiscount(0);setImage(null);setChapters([]);
         quillRef.current.root.innerHTML='';
       }else toast.error(data.message);
-    }catch(error){toast.error(error.message);}
+    }catch(error){toast.error(error.response?.data?.message||error.message);}
   };
 
   useEffect(()=>{

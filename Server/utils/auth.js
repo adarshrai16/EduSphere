@@ -27,16 +27,17 @@ export const getOrCreateUser = async (userId) => {
     const email = clerkUser.emailAddresses?.[0]?.emailAddress || ''
     const name = `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'User'
 
-    try {
-        user = await User.create({
-            _id: clerkUser.id,
-            email,
-            name,
-            imageUrl: clerkUser.imageUrl,
-        })
-    } catch (_) {
-        user = await User.findById(userId)
-    }
+    user = await User.findByIdAndUpdate(
+        clerkUser.id,
+        {
+            $setOnInsert: {
+                email,
+                name,
+                imageUrl: clerkUser.imageUrl,
+            },
+        },
+        { upsert: true, new: true, runValidators: true }
+    )
 
     return user
 }

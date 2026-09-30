@@ -6,7 +6,7 @@ export const protectEducator = async (req,res,next) => {
 
     try {
 
-        const userId = req.auth?.userId
+        const userId = getRequestUserId(req)
 
         if (!userId) {
             return res.json({success:false, message: 'Unauthorized Access'})

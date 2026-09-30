@@ -7,14 +7,14 @@ const Footer = () => {
       <div className="footer-left">
         <img
           src={assets.logo}
-          alt="logo"
+          alt="EduSphere"
           className="footer-logo"
         />
 
         <span className="footer-divider"></span>
 
         <p className="footer-copyright">
-          Copyright 2025 © GreatStack. All Right Reserved.
+          © 2026 EduSphere. All rights reserved.
         </p>
       </div>
 

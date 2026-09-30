@@ -5,7 +5,7 @@ import {toast} from 'react-toastify';
 import Loading from '../../components/student/Loading';
 
 const MyCourses=()=>{
-  const {backendUrl,isEducator,currency,getToken}=useContext(AppContext);
+  const {backendUrl,isEducator,currency,getToken,fetchAllCourses}=useContext(AppContext);
   const [courses,setCourses]=useState(null);
 
   const fetchCourses=async()=>{
@@ -14,6 +14,19 @@ const MyCourses=()=>{
       const {data}=await axios.get(backendUrl+'/api/educator/courses',{headers:{Authorization:`Bearer ${token}`}});
       if(data.success)setCourses(data.courses);
     }catch(error){toast.error(error.message)}
+  };
+
+  const handleDelete=async course=>{
+    if(!window.confirm(`Delete "${course.courseTitle}"? Enrolled students will lose access.`))return;
+    try{
+      const token=await getToken();
+      const {data}=await axios.delete(`${backendUrl}/api/educator/courses/${course._id}`,{headers:{Authorization:`Bearer ${token}`}});
+      if(data.success){
+        setCourses(current=>current.filter(item=>item._id!==course._id));
+        await fetchAllCourses();
+        toast.success(data.message);
+      }else toast.error(data.message);
+    }catch(error){toast.error(error.response?.data?.message||error.message)}
   };
 
   useEffect(()=>{if(isEducator)fetchCourses()},[isEducator]);
@@ -25,7 +38,7 @@ const MyCourses=()=>{
         <table>
           <thead>
             <tr>
-              <th>All Courses</th><th>Earnings</th><th>Students</th><th>Published On</th>
+              <th>All Courses</th><th>Earnings</th><th>Students</th><th>Published On</th><th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -38,6 +51,7 @@ const MyCourses=()=>{
                 <td>{currency} {Math.floor(course.enrolledStudents.length*(course.coursePrice-course.discount*course.coursePrice/100))}</td>
                 <td>{course.enrolledStudents.length}</td>
                 <td>{new Date(course.createdAt).toLocaleDateString()}</td>
+                <td><button type="button" onClick={()=>handleDelete(course)}>Delete</button></td>
               </tr>
             ))}
           </tbody>

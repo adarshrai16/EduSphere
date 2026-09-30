@@ -12,12 +12,10 @@ const CoursesList = () => {
   const [filteredCourse, setFilteredCourse] = useState([])
 
   useEffect(() => {
-    if (allCourses?.length) {
-      const courses = input
-        ? allCourses.filter(c => c.courseTitle.toLowerCase().includes(input.toLowerCase()))
-        : allCourses
-      setFilteredCourse(courses)
-    }
+    const courses = input
+      ? allCourses.filter(c => c.courseTitle.toLowerCase().includes(input.toLowerCase()))
+      : allCourses
+    setFilteredCourse(courses)
   }, [allCourses, input])
 
   return (
