@@ -6,6 +6,30 @@ import mongoose from "mongoose"
 import { getOrCreateUser, getRequestUserId } from "../utils/auth.js"
 import { getStripeClient } from "../utils/stripeClient.js"
 
+const getCompletedCourseIdsForUser = async (userId, userData) => {
+    const directCourseIds = (userData?.enrolledCourses || []).map(id => String(id))
+    const purchasedCourseIds = await Purchase.find({ userId, status: 'completed' }).distinct('courseId')
+
+    return [...new Set([
+        ...directCourseIds,
+        ...purchasedCourseIds.map(id => String(id))
+    ])]
+}
+
+const isUserEnrolledInCourse = async (userId, courseId, userData) => {
+    const courseIdString = String(courseId)
+
+    if (userData?.enrolledCourses?.some(enrolledId => String(enrolledId) === courseIdString)) {
+        return true
+    }
+
+    return !!(await Purchase.exists({
+        userId,
+        courseId: new mongoose.Types.ObjectId(courseIdString),
+        status: 'completed'
+    }))
+}
+
 
 
 // Get User Data
@@ -58,7 +82,10 @@ export const purchaseCourse = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Course not found or unavailable' })
         }
 
-        if (userData.enrolledCourses.some(enrolledId => String(enrolledId) === String(courseData._id))) {
+        const alreadyEnrolled = userData.enrolledCourses.some(enrolledId => String(enrolledId) === String(courseData._id))
+            || !!(await Purchase.exists({ userId, courseId: courseData._id, status: 'completed' }))
+
+        if (alreadyEnrolled) {
             return res.status(409).json({ success: false, message: 'Already enrolled in this course' })
         }
 
@@ -142,8 +169,16 @@ export const userEnrolledCourses = async (req, res) => {
             return res.json({ success: false, message: 'User Not Found' })
         }
 
-        await userData.populate('enrolledCourses')
-        res.json({ success: true, enrolledCourses: userData.enrolledCourses })
+        const courseIds = await getCompletedCourseIdsForUser(userId, userData)
+        const validObjectIds = courseIds
+            .filter(id => mongoose.isValidObjectId(id))
+            .map(id => new mongoose.Types.ObjectId(id))
+
+        const enrolledCourses = validObjectIds.length
+            ? await Course.find({ _id: { $in: validObjectIds } })
+            : []
+
+        res.json({ success: true, enrolledCourses })
 
     } catch (error) {
         res.json({ success: false, message: error.message })
@@ -176,9 +211,7 @@ export const updateUserCourseProgress = async (req, res) => {
             return res.status(404).json({ success: false, message: 'User or course not found' })
         }
 
-        const isEnrolled = userData.enrolledCourses.some(
-            enrolledId => String(enrolledId) === String(courseData._id)
-        )
+        const isEnrolled = await isUserEnrolledInCourse(userId, courseData._id, userData)
         if (!isEnrolled) {
             return res.status(403).json({ success: false, message: 'Enroll in this course to save progress' })
         }
@@ -234,9 +267,7 @@ export const getUserCourseProgress = async (req, res) => {
             return res.status(404).json({ success: false, message: 'User or course not found' })
         }
 
-        const isEnrolled = userData.enrolledCourses.some(
-            enrolledId => String(enrolledId) === String(courseData._id)
-        )
+        const isEnrolled = await isUserEnrolledInCourse(userId, courseData._id, userData)
         if (!isEnrolled) {
             return res.status(403).json({ success: false, message: 'Enroll in this course to view progress' })
         }

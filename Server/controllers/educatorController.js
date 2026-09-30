@@ -131,7 +131,6 @@ export const educatorDashboardData = async (req, res) => {
 
         const courseIds = courses.map(course => course._id);
 
-        // Calculate total earnings from purchases
         const purchases = await Purchase.find({
             courseId: { $in: courseIds },
             status: 'completed'
@@ -139,19 +138,45 @@ export const educatorDashboardData = async (req, res) => {
 
         const totalEarnings = purchases.reduce((sum, purchase) => sum + purchase.amount, 0);
 
-        // Collect unique enrolled student IDs with their course titles
+        const completedPurchaseRows = await Purchase.find({
+            courseId: { $in: courseIds },
+            status: 'completed'
+        }).populate('userId', 'name imageUrl');
+
         const enrolledStudentsData = [];
+        const seenStudentCoursePairs = new Set();
+
+        for (const purchase of completedPurchaseRows) {
+            const student = purchase.userId;
+            if (!student) continue;
+
+            const course = await Course.findById(purchase.courseId).select('courseTitle');
+            const key = `${student._id}-${purchase.courseId.toString()}`;
+
+            if (seenStudentCoursePairs.has(key) || !course) continue;
+            seenStudentCoursePairs.add(key);
+
+            enrolledStudentsData.push({
+                courseTitle: course.courseTitle,
+                student
+            });
+        }
+
         for (const course of courses) {
-            const students = await User.find({
+            const fallbackStudents = await User.find({
                 _id: { $in: course.enrolledStudents }
             }, 'name imageUrl');
 
-            students.forEach(student => {
+            for (const student of fallbackStudents) {
+                const key = `${student._id}-${course._id.toString()}`;
+                if (seenStudentCoursePairs.has(key)) continue;
+                seenStudentCoursePairs.add(key);
+
                 enrolledStudentsData.push({
                     courseTitle: course.courseTitle,
                     student
                 });
-            });
+            }
         }
 
         res.json({
@@ -176,24 +201,40 @@ export const getEnrolledStudentsData = async (req, res) => {
             return res.json({ success: false, message: 'Not authenticated' })
         }
 
-        // Fetch all courses created by the educator
         const courses = await Course.find({ educator });
-
-        // Get the list of course IDs
         const courseIds = courses.map(course => course._id);
-
-        // Fetch purchases with user and course data
         const purchases = await Purchase.find({
             courseId: { $in: courseIds },
             status: 'completed'
         }).populate('userId', 'name imageUrl').populate('courseId', 'courseTitle');
 
-        // enrolled students data
         const enrolledStudents = purchases.map(purchase => ({
             student: purchase.userId,
             courseTitle: purchase.courseId.courseTitle,
             purchaseDate: purchase.createdAt
         }));
+
+        const seenRecords = new Set(
+            enrolledStudents.map(student => `${student.student?._id || student.student}-${student.courseTitle}`)
+        );
+
+        for (const course of courses) {
+            const fallbackStudents = await User.find({
+                _id: { $in: course.enrolledStudents }
+            }, 'name imageUrl');
+
+            for (const student of fallbackStudents) {
+                const key = `${student._id}-${course.courseTitle}`;
+                if (seenRecords.has(key)) continue;
+
+                enrolledStudents.push({
+                    student,
+                    courseTitle: course.courseTitle,
+                    purchaseDate: course.createdAt || new Date()
+                });
+                seenRecords.add(key);
+            }
+        }
 
         res.json({
             success: true,
