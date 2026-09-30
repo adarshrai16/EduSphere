@@ -17,9 +17,7 @@ const getClerkProfile = (data) => {
   };
 };
 
-// ===============================
-// CLERK WEBHOOK
-// ===============================
+//clerk webhook
 export const clerkWebhooks = async (req, res) => {
   try {
     // Create Svix webhook instance
@@ -40,9 +38,7 @@ export const clerkWebhooks = async (req, res) => {
 
     console.log("Clerk webhook received:", type);
 
-    // ===============================
-    // USER CREATED
-    // ===============================
+    // User created
     switch (type) {
       case "user.created": {
         await User.findByIdAndUpdate(
@@ -61,10 +57,7 @@ export const clerkWebhooks = async (req, res) => {
           message: "User created",
         });
       }
-
-      // ===============================
-      // USER UPDATED
-      // ===============================
+      //user updated
       case "user.updated": {
         await User.findByIdAndUpdate(data.id, {
           $set: getClerkProfile(data),
@@ -84,9 +77,8 @@ export const clerkWebhooks = async (req, res) => {
         });
       }
 
-      // ===============================
-      // USER DELETED
-      // ===============================
+     
+      // user deleted
       case "user.deleted": {
         await Promise.all([
           User.findByIdAndDelete(data.id),
@@ -110,9 +102,7 @@ export const clerkWebhooks = async (req, res) => {
         });
       }
 
-      // ===============================
-      // OTHER EVENTS
-      // ===============================
+      //other events 
       default: {
         console.log("Unhandled Clerk event:", type);
 
