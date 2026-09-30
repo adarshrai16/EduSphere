@@ -165,7 +165,7 @@ export const updateUserCourseProgress = async(req,res)=>{
 }
 
 // get user course progress
-export const getUserCourseProgress = await async(req,res)=>{
+export const getUserCourseProgress = async (req, res) => {
     try{
         const userId = req.auth.userId
         const {courseId}= req.body
