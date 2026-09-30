@@ -12,12 +12,35 @@ import courseRouter from './routes/courseRoute.js'
 // Initialize Express
 const app = express()
 
+const allowedOrigins = [
+  /^http:\/\/localhost:\d+$/, 
+  /^https:\/\/.*\.vercel\.app$/,
+  process.env.CLIENT_URL
+].filter(Boolean)
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.some((allowed) =>
+      typeof allowed === 'string' ? allowed === origin : allowed.test(origin)
+    )) {
+      callback(null, true)
+      return
+    }
+
+    callback(new Error('Not allowed by CORS'))
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}
+
 // Connect to database
 await connectDB()
 await connectCloudinary()
 
 // Middlewares
-app.use(cors())
+app.use(cors(corsOptions))
+app.options('*', cors(corsOptions))
 app.use(clerkMiddleware())
 
 // Routes

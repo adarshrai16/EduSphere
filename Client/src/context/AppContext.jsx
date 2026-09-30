@@ -20,7 +20,7 @@ const shouldToastError = (message) => {
 
 export const AppContextProvider = (props) => {
 
-    const backendUrl = import.meta.env.VITE_BACKEND_URL
+    const backendUrl = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/+$/, '')
     const currency = import.meta.env.VITE_CURRENCY
 
     const navigate = useNavigate()
